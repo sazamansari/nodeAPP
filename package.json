@@ -1,7 +1,7 @@
 {
   "name": "ngenx_nodejs",
   "version": "1.0.0",
-  "description": "1. reverse proxy    Load balancer    Http Server",
+  "description": "1. reverse proxy",
   "main": "app.js",
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
