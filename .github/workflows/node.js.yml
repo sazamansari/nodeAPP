@@ -1,27 +1,41 @@
-name: Start Node.js Application
+name: Node.js CI/CD to EC2
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main  # Trigger on pushes to main branch
 
 jobs:
-  start-app:
-
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: ubuntu-latest  # GitHub-hosted runner
 
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Use Node.js
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '16'  # Adjust this to match your project's Node.js version requirement
+        node-version: '16'  # Specify your Node.js version
 
-    - name: Install Dependencies
+    - name: Install dependencies
       run: npm install
 
-    - name: Start Application
-      run: npm start &
-      timeout-minutes: 1  # Runs the application for 1 minute to ensure it starts without errors
+    - name: Run tests
+      run: npm test  # Make sure you have a test script in your package.json
+
+    - name: Setup SSH key
+      uses: webfactory/ssh-agent@v0.5.4
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Rsync project files
+      run: rsync -av --exclude='.git*' --exclude='node_modules' ./ ${{ secrets.USER }}@${{ secrets.HOST }}:/var/www/nodeapp
+
+    - name: Install production dependencies and restart application
+      run: |
+        ssh ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
+          cd /var/www/nodeapp
+          npm install --production
+          pm2 restart all || pm2 start npm --name "nodeapp" -- start
+        EOF
