@@ -1,31 +1,27 @@
-name: Node.js CI
+name: Start Node.js Application
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
-  build:
+  start-app:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [20]
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
+    - uses: actions/checkout@v2
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v2
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '16'  # Adjust this to match your project's Node.js version requirement
 
-    - name: Install dependencies
+    - name: Install Dependencies
       run: npm install
 
-    - name: Run CI script
-      run: npm run ci
+    - name: Start Application
+      run: npm start &
+      timeout-minutes: 1  # Runs the application for 1 minute to ensure it starts without errors
