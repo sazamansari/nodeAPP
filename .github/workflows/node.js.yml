@@ -1,6 +1,5 @@
 name: Node.js CI
 
-# Trigger this workflow on pushes to the 'main' branch and on pull requests
 on:
   push:
     branches: [main]
@@ -9,44 +8,43 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [18.x]  # You can adjust this to match your Node.js version
+        node-version: [18.x]  # Use Node.js 18.x for your project
 
     steps:
-      # Checkout the code from the repository
+      # Checkout the repository (This will use Node.js 20 as per GitHub's internal policy)
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Node.js environment based on the matrix defined
-      - name: Set up Node.js
+      # Set up Node.js environment for your project (specifically Node.js 18.x)
+      - name: Set up Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
-      # Install dependencies
+      # Install project dependencies
       - name: Install dependencies
         run: npm install
 
-      # Run the linter
+      # Run ESLint to check code quality
       - name: Run ESLint
         run: npm run lint
 
-      # Run the application (This is optional in CI, but added for testing in dev mode)
+      # Run the application (optional in CI, mainly for testing in dev mode)
       - name: Run the app
         run: npm run dev
         env:
           NODE_ENV: development
 
-      # Run tests (You don't have tests defined yet)
+      # Test application (if you had tests defined, they'd go here)
       - name: Test Application
         run: |
           echo "No tests available"
 
-      # Upload Node.js build artifacts (optional, if you need to keep any)
+      # Optional: Upload any build artifacts
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
