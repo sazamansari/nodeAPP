@@ -12,27 +12,46 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x]  # Use Node.js 18.x for your project
+        node-version: [18.x]
 
     steps:
-      # Checkout the repository (This will use Node.js 20 as per GitHub's internal policy)
+      # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set up Node.js environment for your project (specifically Node.js 18.x)
+      # Cache npm dependencies
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      # Set up Node.js environment for your project
       - name: Set up Node.js 18.x
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
-      # Install project dependencies
+      # Install project dependencies using npm ci
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Run ESLint to check code quality
-      # Run the application (optional in CI, mainly for testing in dev mode)
+      # Debugging: Check current directory and list files
+      - name: Show current directory
+        run: pwd
+
+      - name: List files in directory
+        run: ls -la
+
+      # Run ESLint to check code quality (optional)
+      # - name: Lint code with ESLint
+      #   run: npm run lint
+
+      # Run the application with verbose output
       - name: Run the app
-        run: npm start
+        run: npm run build --verbose
 
       # Test application (if you had tests defined, they'd go here)
       - name: Test Application
@@ -44,6 +63,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: nodejs-build
-          
           path: .
-
