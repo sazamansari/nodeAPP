@@ -1,42 +1,54 @@
-name: Node.js CI/CD to EC2
+name: Node.js CI
 
+# Trigger this workflow on pushes to the 'main' branch and on pull requests
 on:
   push:
-    branches:
-      - main  # Trigger on pushes to main branch
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  build-and-deploy:
-    # Use self-hosted runner instead of GitHub-hosted runner
-    runs-on: self-hosted  # This will run on your self-hosted runner
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]  # You can adjust this to match your Node.js version
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Checkout the code from the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'  # Specify your Node.js version
+      # Set up Node.js environment based on the matrix defined
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
 
-    - name: Install dependencies
-      run: npm install
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run tests
-      run: npm test  # Make sure you have a test script in your package.json
+      # Run the linter
+      - name: Run ESLint
+        run: npm run lint
 
-    - name: Setup SSH key
-      uses: webfactory/ssh-agent@v0.5.4
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      # Run the application (This is optional in CI, but added for testing in dev mode)
+      - name: Run the app
+        run: npm run dev
+        env:
+          NODE_ENV: development
 
-    - name: Rsync project files
-      run: rsync -av --exclude='.git*' --exclude='node_modules' ./ ${{ secrets.USER }}@${{ secrets.HOST }}:/var/www/nodeapp
+      # Run tests (You don't have tests defined yet)
+      - name: Test Application
+        run: |
+          echo "No tests available"
 
-    - name: Install production dependencies and restart application
-      run: |
-        ssh ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
-          cd /var/www/nodeapp
-          npm install --production
-          pm2 restart all || pm2 start npm --name "nodeapp" -- start
-        EOF
+      # Upload Node.js build artifacts (optional, if you need to keep any)
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: nodejs-build
+          path: .
